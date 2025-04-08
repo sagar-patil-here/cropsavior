@@ -24,7 +24,7 @@ const HomePage = () => {
                 </Button>
               </Link>
               <Link to="/weather">
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+                <Button variant="outline" size="lg" className="border-white text-crop-green hover:bg-white/10 hover:text-crop-green">
                   Check Weather
                 </Button>
               </Link>
