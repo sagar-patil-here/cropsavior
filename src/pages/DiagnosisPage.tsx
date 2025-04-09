@@ -1,6 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Upload, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { analyzeCropImage } from '../services/geminiService';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -76,30 +77,160 @@ const DiagnosisPage = () => {
     }
   };
 
-  const analyzeCrop = () => {
+  const analyzeCrop = async () => {
     if (!selectedImage) return;
     
+    // Check API key first
+    if (!import.meta.env.VITE_GEMINI_API_KEY) {
+      toast({
+        title: "Configuration Error",
+        description: "API key is not configured. Please set up VITE_GEMINI_API_KEY in your environment variables.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsAnalyzing(true);
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Mock diagnosis result (in real app, this would come from an API)
-      const mockResult: DiagnosisResult = {
-        disease: "Late Blight",
-        confidence: 92,
-        description: "Late blight is a disease that affects potato and tomato plants. It appears as dark, water-soaked spots on leaves that quickly grow into large brown lesions.",
-        treatment: "Apply copper-based fungicides immediately. Remove infected plant parts and destroy them away from the field.",
-        prevention: "Use resistant varieties, practice crop rotation, ensure proper spacing for air circulation, and apply preventive fungicides during humid conditions.",
-        severity: "high"
+    try {
+      // Extract base64 data from selectedImage
+      const base64Data = selectedImage.split(',')[1];
+      
+      // Call Gemini API
+      const analysis = await analyzeCropImage(base64Data);
+      
+      // Format the Gemini response into our DiagnosisResult structure
+      const formattedResult: DiagnosisResult = {
+        disease: extractDiseaseName(analysis),
+        confidence: extractConfidenceScore(analysis),
+        description: extractDescription(analysis),
+        treatment: extractTreatment(analysis),
+        prevention: extractPrevention(analysis),
+        severity: determineSeverity(analysis)
       };
       
-      setResult(mockResult);
-      setIsAnalyzing(false);
+      setResult(formattedResult);
       
       toast({
         title: "Analysis Complete",
         description: "Disease diagnosis has been completed successfully.",
       });
-    }, 2000);
+    } catch (error) {
+        let description = "There was an error analyzing the image. Please try again.";
+        
+        if (error.message.includes('API key is missing') || error.message.includes('Invalid API key')) {
+            description = "The analysis service is not properly configured. Please ensure VITE_GEMINI_API_KEY is set in your .env file.";
+        } else if (error.message.includes('Network error')) {
+            description = "Unable to connect to the analysis service. Please check your internet connection.";
+        } else if (error.message.includes('Request timed out')) {
+            description = "The analysis took too long. Please try again with a smaller image.";
+        } else if (error.message.includes('Too many requests')) {
+            description = "Too many analysis requests. Please wait a few minutes and try again.";
+        } else if (error.message.includes('Invalid request')) {
+            description = "Invalid image format. Please try with a different image.";
+        }
+
+        toast({
+            title: "Analysis Failed",
+            description,
+            variant: "destructive"
+        });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Helper functions to parse Gemini response
+  const cleanText = (text: string): string => {
+    // Enhanced cleaning with better markdown removal and whitespace handling
+    return text
+      .replace(/\*\*\*/g, '')
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/#+/g, '')
+      .replace(/```/g, '')
+      .replace(/`/g, '')
+      .replace(/\n+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const extractDiseaseName = (text: string): string => {
+    // More robust disease name extraction
+    const diseaseMatch = text.match(/(?:Identified diseases?|Disease|Issue):?\s*([^\n]+)/i);
+    if (diseaseMatch) {
+      const name = cleanText(diseaseMatch[1]);
+      return name || "Plant Health Concern"; // Fallback if empty
+    }
+    
+    // Try to extract from common patterns
+    const patterns = [
+      /(?:appears to be|likely|possibly|suggest)\s([^\n.,;]+)/i,
+      /(?:signs of|symptoms of)\s([^\n.,;]+)/i,
+      /(?:probably|most likely)\s([^\n.,;]+)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) return cleanText(match[1]);
+    }
+    
+    return "Plant Health Concern"; // Final fallback
+  };
+
+  const extractConfidenceScore = (text: string): number => {
+    // More accurate confidence score extraction
+    const confidenceMatch = text.match(/(?:confidence|certainty|probability):?\s*(\d+)%/i);
+    if (confidenceMatch) return Math.min(100, Math.max(0, parseInt(confidenceMatch[1])));
+    
+    // Fallback to health assessment score
+    const healthMatch = text.match(/(?:Health assessment|Score|Rating):\s*(\d+)/i);
+    if (healthMatch) return Math.min(100, Math.max(0, parseInt(healthMatch[1]) * 10));
+    
+    // Default confidence based on severity indicators
+    if (text.match(/severe|critical|emergency/i)) return 85;
+    if (text.match(/moderate|medium|middle/i)) return 65;
+    return 50; // Default confidence
+  };
+
+  const extractDescription = (text: string): string => {
+    // Improved description extraction with better summarization
+    const healthMatch = text.match(/(?:Health assessment|Description|Analysis|Findings):\s*([\s\S]*?)(?:\n(?:Identified|Treatment|Recommendation)|$)/i);
+    if (!healthMatch) return "No health assessment available";
+    
+    const fullText = cleanText(healthMatch[1]);
+    
+    // Smart summarization
+    if (fullText.length > 150) {
+      const sentences = fullText.split(/(?<=[.!?])\s+/);
+      if (sentences.length > 2) {
+        // Keep first sentence and most important subsequent one
+        const importantSentence = sentences.slice(1).find(s => 
+          s.match(/important|severe|critical|key|primary|main/i)
+        ) || sentences[1];
+        return `${sentences[0]} ${importantSentence}...`;
+      }
+    }
+    return fullText;
+  };
+
+  const extractTreatment = (text: string): string => {
+    const treatmentMatch = text.match(/(?:Recommended treatments|Treatment):\s*([\s\S]*?)(?:\n(?:Prevention|Expected)|$)/i);
+    return treatmentMatch ? cleanText(treatmentMatch[1]) : "No treatment recommendations available";
+  };
+
+  const extractPrevention = (text: string): string => {
+    const preventionMatch = text.match(/(?:Prevention measures|Prevention):\s*([\s\S]*?)(?:\n(?:Expected|$))/i);
+    return preventionMatch ? cleanText(preventionMatch[1]) : "No prevention measures available";
+  };
+
+  const determineSeverity = (text: string): 'low' | 'moderate' | 'high' => {
+    const healthMatch = text.match(/Health assessment:\s*(\d+)/i);
+    if (!healthMatch) return 'low';
+    
+    const score = parseInt(healthMatch[1]);
+    if (score <= 4) return 'high';
+    if (score <= 7) return 'moderate';
+    return 'low';
   };
 
   const resetDiagnosis = () => {

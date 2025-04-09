@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Cloud, Image, Database, BarChart, Users, Clock } from 'lucide-react';
+import { CropAnalysis } from '../components/CropAnalysis';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/Layout';
 
@@ -329,9 +330,10 @@ const HomePage = () => {
                 {index === 2 && <Database className="w-8 h-8 text-crop-orange" />}
               </div>
               <h3 className="text-xl font-semibold mb-3">{feature.title[language]}</h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-sm mb-4">
                 {feature.description[language]}
               </p>
+              {index === 0 && <CropAnalysis />}
             </div>
           ))}
         </div>
