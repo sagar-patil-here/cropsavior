@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Leaf, Cloud, Image, Database, Info, Menu, X } from 'lucide-react';
@@ -225,8 +224,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   {language === 'hindi' && "संपर्क करें"}
                   {language === 'marathi' && "संपर्क करा"}
                 </h3>
-                <p className="text-gray-200 text-sm mb-2">contact@cropsavior.in</p>
-                <p className="text-gray-200 text-sm">+91 98765 43210</p>
+                <p className="text-gray-200 text-sm mb-2">
+                  <span className="inline-block w-14">Email:</span>
+                  contact@cropsavior.in
+                </p>
+                <p className="text-gray-200 text-sm">
+                  <span className="inline-block w-14">Call:</span>
+                  121
+                </p>
               </div>
             </div>
             <div className="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-300">
