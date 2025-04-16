@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Cloud, Image, Database, BarChart, Users, Clock } from 'lucide-react';
@@ -249,12 +248,12 @@ const HomePage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up opacity-0" style={{ animationDelay: '0.4s' }}>
               <Link to="/diagnosis">
-                <Button size="lg" className="bg-white text-crop-green hover:bg-green-50">
+                <Button size="lg" className="bg-white text-crop-green hover:bg-green-50 w-full sm:w-auto">
                   {content.hero.cta.diagnose[language]}
                 </Button>
               </Link>
               <Link to="/weather">
-                <Button variant="outline" size="lg" className="border-white text-crop-green hover:bg-white/10 hover:text-crop-green">
+                <Button size="lg" className="bg-white text-crop-green hover:bg-green-50 w-full sm:w-auto">
                   {content.hero.cta.weather[language]}
                 </Button>
               </Link>
@@ -262,8 +261,8 @@ const HomePage = () => {
           </div>
         </div>
         
-        {/* Decorative elements */}
-        <div className="absolute -bottom-1 left-0 w-full overflow-hidden">
+        {/* Decorative elements - Hidden on mobile */}
+        <div className="absolute -bottom-1 left-0 w-full overflow-hidden hidden md:block">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-16 text-background fill-current">
             <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"></path>
           </svg>
