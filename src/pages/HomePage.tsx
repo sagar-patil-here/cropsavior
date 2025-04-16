@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, Cloud, Image, Database, BarChart, Users, Clock } from 'lucide-react';
-import { CropAnalysis } from '../components/CropAnalysis';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/Layout';
 
@@ -320,7 +319,11 @@ const HomePage = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {content.features.items.map((feature, index) => (
-            <div key={index} className="feature-card">
+            <Link 
+              key={index} 
+              to={index === 0 ? "/diagnosis" : index === 1 ? "/weather" : "/soil-tips"}
+              className="feature-card hover:shadow-lg transition-shadow"
+            >
               <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
                 index === 0 ? "bg-green-50" : index === 1 ? "bg-blue-50" : "bg-amber-50"
               }`}>
@@ -332,8 +335,7 @@ const HomePage = () => {
               <p className="text-gray-600 text-sm mb-4">
                 {feature.description[language]}
               </p>
-              {index === 0 && <CropAnalysis />}
-            </div>
+            </Link>
           ))}
         </div>
       </section>
