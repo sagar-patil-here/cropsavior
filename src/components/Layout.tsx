@@ -46,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <header className="bg-white shadow-sm py-3 sticky top-0 z-50">
           <div className="container mx-auto px-4 flex justify-between items-center">
             <Link to="/" className="flex items-center gap-2">
-              <Leaf className="h-6 w-6 text-crop-green" />
+              <img src="/favicon.ico" alt="CropSavior Logo" className="h-6 w-6" />
               <span className="font-bold text-xl text-crop-green">CropSavior</span>
             </Link>
             
@@ -193,7 +193,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <Leaf className="h-6 w-6" />
+                  <img src="/favicon.ico" alt="CropSavior Logo" className="h-6 w-6" />
                   <span className="font-bold text-xl">CropSavior</span>
                 </div>
                 <p className="text-gray-200 text-sm">
